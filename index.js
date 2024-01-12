@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const { userRouter } = require('./routers/userRouter');
 const { postRouter } = require('./routers/postRouter');
+const { dbConncet } = require('./config/dbConfig');
 
 require('dotenv').config();
 
@@ -17,5 +18,6 @@ app.use('/api/users', userRouter );
 
 const port = process.env.PORT;
 app.listen(port, ()=>{
+    dbConncet()
     console.log(`Server is listen at port: ${port}`)
 })
