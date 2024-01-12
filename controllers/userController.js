@@ -1,3 +1,4 @@
+const { userModel } = require("../models/userModel")
 
 
 const register = (req, res)=>{
@@ -8,7 +9,8 @@ const login = (req, res)=>{
     res.send('this is from login')
 }
 
-const getUser = (req, res)=>{
+const getUser = async (req, res)=>{
+    // await userModel.find({})
     res.send('this is from getuser')
 }
 
