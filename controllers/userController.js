@@ -59,7 +59,7 @@ const login = async (req, res) => {
 const getUser = async (req, res) => {
     try {
         const {id} = req.params;
-        const user = await userModel.findById(id);
+        const user = await userModel.findById(id).select('-password');
         if(!user){
             return res.status(422).json({error: "User not found"})
         }
@@ -78,8 +78,17 @@ const editUser = (req, res) => {
     res.send('this is from edituser')
 }
 
-const getAuthors = (req, res) => {
-    res.send('this is from getauthors')
+const getAuthors = async (req, res) => {
+    try {
+        const author = await userModel.find().select('-password');
+        if(!author){
+            return res.status(422).json({error: "Author not found"})
+        }
+        return res.status(200).json(author)
+    } catch (error) {
+        console.log(error);
+        return res.status(422).json({error:"Internal Server Error"})
+    }
 }
 
 module.exports = { register, login, getUser, changeAvtar, editUser, getAuthors }
