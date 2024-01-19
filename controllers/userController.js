@@ -57,8 +57,17 @@ const login = async (req, res) => {
 }
 
 const getUser = async (req, res) => {
-    // await userModel.find({})
-    res.send('this is from getuser')
+    try {
+        const {id} = req.params;
+        const user = await userModel.findById(id);
+        if(!user){
+            return res.status(422).json({error: "User not found"})
+        }
+        return res.status(200).json(user)
+    } catch (error) {
+        console.log(error);
+        return res.status(422).json({error:"Internal Server Error"})
+    }
 }
 
 const changeAvtar = (req, res) => {
