@@ -1,6 +1,10 @@
 const { userModel } = require("../models/userModel")
 const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken')
+const jwt = require('jsonwebtoken');
+const fs = require('fs');
+const path = require('path');
+const {v4: uuid} = require('uuid')
+
 require('dotenv').config()
 
 const register = async (req, res) => {
@@ -70,8 +74,53 @@ const getUser = async (req, res) => {
     }
 }
 
-const changeAvtar = (req, res) => {
-    res.send('this is from changeavatr')
+const changeAvtar = async (req, res) => {
+   try {
+    // console.log(req.files)
+
+    if(!req.files || !req.files.avatar){
+        return res.status(422).json({error:"Please choose an image."})
+    };
+    
+    //find the user from db
+    const user = await userModel.findById(req.user.id);
+
+    //delete avatar if already exists
+    if(user.avatar){
+        fs.unlink(path.join(__dirname, '..', 'uploads', user.avatar), (error)=>{
+            if(error){
+                return res.status(422).json(erro)
+            }
+        })
+    };
+
+    const {avatar} = req.files;
+    if(avatar.size > 500000){
+        return res.status(422).json({error: "Profile picture toobig. Should be less than 50kb"})
+    };
+
+    //change avatar name
+    let fileName;
+    fileName = avatar.name;
+    let splittedFileName =fileName.split('.');
+    let newFileName = splittedFileName[0] + uuid() + '.' + splittedFileName[splittedFileName.length -1]
+    
+    avatar.mv(path.join(__dirname,'..', 'uploads', newFileName), async(error)=>{
+        if(error){
+        return res.status(422).json({error:"Avatar couldn't be changed."})
+        };
+
+        const updatedAvatar = await userModel.findByIdAndUpdate(req.user.id, {avatar: newFileName}, {new:true});
+
+        if(!updatedAvatar){
+         return res.status(422).json({error:"Avatar couldn't be changed."})
+        };
+        return res.status(200).json(updatedAvatar)
+    })
+   } catch (error) {
+    console.log(error);
+    return res.status(422).json({error:"Internal Server Error"})
+   }
 }
 
 const editUser = (req, res) => {
