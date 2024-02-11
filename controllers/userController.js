@@ -123,8 +123,41 @@ const changeAvtar = async (req, res) => {
    }
 }
 
-const editUser = (req, res) => {
-    res.send('this is from edituser')
+const editUser = async(req, res) => {
+    try {
+        const {name, email, currentPassword, newPassword, confirmNewPassword} = req.body;
+        if(!name || !email || !currentPassword || !newPassword || !confirmNewPassword){
+            return res.status(422).json({error:"Fill in all fields"});
+        };
+
+        const user = await userModel.findById(req.user.id);
+        if(!user){
+            return res.status(422).json({error:"User not found"})
+        };
+        //make sure new email doesn't already exist
+        const emailExists = await userModel.findOne({email});
+        if(emailExists && (emailExists._id != req.user.id)){
+            return res.status(422).json({error: "Email already exist"});
+        };
+
+        const validateUserPassword =  bcrypt.compareSync(currentPassword, user.password);
+
+        if(!validateUserPassword){
+            return res.status(422).json({error:"Invalid current password"});
+        }
+        
+        if(newPassword !== confirmNewPassword){
+            return res.status(422).json({error:"New password do not match"});
+        };
+
+        const hash = bcrypt.hashSync(newPassword, 10);
+        const newInfo = await userModel.findByIdAndUpdate(req.user.id, {name, email, password:hash}, {new:true});
+        return res.status(200).json(newInfo);
+
+    } catch (error) {
+        console.log(error);
+        return res.status(422).json({error:"Internal Server Error"});
+    }
 }
 
 const getAuthors = async (req, res) => {
